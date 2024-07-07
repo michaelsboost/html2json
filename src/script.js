@@ -14,20 +14,12 @@ let project = {
   json: `[
   {
     "tag": "main",
-    "type": "box",
-    "name": "box",
-    "id": "z5a93xb61",
-    "styles": "ym79qjhln",
     "props": {
       "class": "container"
     },
     "children": [
       {
         "tag": "button",
-        "type": "text",
-        "name": "text",
-        "id": "eg89bdqbz",
-        "styles": "dkp54r8ym",
         "props": {
           "class": "bg-transparent border-0 px-3 py-2 m-0"
         },
@@ -37,15 +29,8 @@ let project = {
         "children": [
           {
             "tag": "span",
-            "type": "text",
-            "name": "text",
-            "id": "wzrfyyc1n",
-            "styles": "n1bcgs5v1",
-            "children": [
-              {
-                "text": "hello world"
-              }
-            ]
+            "children": [],
+            "text": "hello world"
           }
         ]
       }
@@ -244,7 +229,7 @@ const Settings = {
     <div 
       class="flex justify-between items-center"
     >
-      <button class="${buttonClass} bg-transparent border-0 px-3 py-2" onclick="settingsBtn.onclick();">
+      <button class="${buttonClass} bg-transparent border-0 px-3 py-2" style="color: unset;" onclick="settingsBtn.onclick();">
         <svg class="${svgClass}" viewBox="0 0 384 512">
           <path 
             fill="currentColor" 
@@ -345,7 +330,7 @@ function handleEnterKey(event) {
 }
 
 // converts html to json
-function html2json(input, output) {
+function html2json(input) {
   function generateId() {
     let id = '';
     while (!/^[a-zA-Z]/.test(id)) {
@@ -447,9 +432,7 @@ function html2json(input, output) {
         if (child.nodeType === Node.ELEMENT_NODE) {
           obj.children.push(elementToJson(child));
         } else if (child.nodeType === Node.TEXT_NODE && child.nodeValue.trim()) {
-          obj.children.push({
-            text: child.nodeValue.trim()
-          });
+          obj.text = child.nodeValue.trim();
         }
       });
     }
@@ -457,17 +440,33 @@ function html2json(input, output) {
     return obj;
   }
 
-  const inputHTML = document.querySelector(`${input}`).value;
+  project.html = input;
   const parser = new DOMParser();
-  const doc = parser.parseFromString(inputHTML, 'text/html');
+  const doc = parser.parseFromString(input, 'text/html');
   const json = Array.from(doc.body.children).map(child => elementToJson(child));
-  project.html = inputHTML;
   project.json = JSON.stringify(json, null, 2);
-  document.querySelector(`${output}`).value = project.json;
+  return project.json;
 }
 // converts json to html
-function json2html(input, output) {
+function json2html(input) {
+  const selfClosingTags = [
+    'br',
+    'hr',
+    'input',
+    'img',
+    'option'
+  ]
   function jsonToElement(json) {
+    function escapeHtml(text) {
+      const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      };
+      return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+    }
     const renderElement = element => {
       let html = '';
       
@@ -478,22 +477,17 @@ function json2html(input, output) {
     
       html += `<${element.tag}`;
         
-      if (!element.props) {
-        element.props = {};
-        if (!element.props.class) {
-          element.props.class = `${classList}`;
-        }
-      }
       if (element.props) {
-        if (!element.props.class) {
-          element.props.class = `${classList}`;
-        }
         for (const [key, value] of Object.entries(element.props)) {
           html += ` ${key}="${value}"`;
         }
       }
     
-      html += '>';
+      if (selfClosingTags.includes(element.tag)) {
+        html += '/>';
+      } else {
+        html += '>';
+      }
     
       if (element.text) {
         html += escapeHtml(element.text);
@@ -505,7 +499,9 @@ function json2html(input, output) {
         }
       }
     
-      html += `</${element.tag}>`;
+      if (!selfClosingTags.includes(element.tag)) {
+        html += `</${element.tag}>`;
+      }
       return html;
     }
   
@@ -539,10 +535,9 @@ function json2html(input, output) {
     return result.substring(1, result.length - 3).trim();
   }
 
-  const inputJSON = JSON.parse(document.querySelector(`${input}`).value);
-  project.json = inputJSON;
-  project.html = beautifyHtml(inputJSON);
-  document.querySelector(`${output}`).value = project.html;
+  project.json = JSON.parse(input);
+  project.html = beautifyHtml(project.json);
+  return project.html;
 }
 // new project
 function newProject() {
@@ -728,9 +723,10 @@ document.addEventListener('DOMContentLoaded', function() {
   // Initialize and render components
   MenuBar.render('[data-menubar]');
   Settings.render('[data-panel=settings]');
-  input.oninput = () => html2json('#input', '#output');
-  output.oninput = () => json2html('#output', '#input');
-  // input.value = project.html;
-  // output.value = project.json;
-  // input.oninput();
+  const input = document.getElementById('input');
+  const output = document.getElementById('output');
+  input.oninput = () => output.value = html2json(input.value);
+  output.oninput = () => input.value = json2html(output.value);
+  input.value = project.html;
+  output.value = project.json;
 });
