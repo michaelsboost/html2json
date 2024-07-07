@@ -1,3 +1,7 @@
+(function(a,b){if("function"==typeof define&&define.amd)define([],b);else if("undefined"!=typeof exports)b();else{b(),a.FileSaver={exports:{}}.exports}})(this,function(){"use strict";function b(a,b){return"undefined"==typeof b?b={autoBom:!1}:"object"!=typeof b&&(console.warn("Deprecated: Expected third argument to be a object"),b={autoBom:!b}),b.autoBom&&/^\s*(?:text\/\S*|application\/xml|\S*\/\S*\+xml)\s*;.*charset\s*=\s*utf-8/i.test(a.type)?new Blob(["\uFEFF",a],{type:a.type}):a}function c(a,b,c){var d=new XMLHttpRequest;d.open("GET",a),d.responseType="blob",d.onload=function(){g(d.response,b,c)},d.onerror=function(){console.error("could not download file")},d.send()}function d(a){var b=new XMLHttpRequest;b.open("HEAD",a,!1);try{b.send()}catch(a){}return 200<=b.status&&299>=b.status}function e(a){try{a.dispatchEvent(new MouseEvent("click"))}catch(c){var b=document.createEvent("MouseEvents");b.initMouseEvent("click",!0,!0,window,0,0,0,80,20,!1,!1,!1,!1,0,null),a.dispatchEvent(b)}}var f="object"==typeof window&&window.window===window?window:"object"==typeof self&&self.self===self?self:"object"==typeof global&&global.global===global?global:void 0,a=f.navigator&&/Macintosh/.test(navigator.userAgent)&&/AppleWebKit/.test(navigator.userAgent)&&!/Safari/.test(navigator.userAgent),g=f.saveAs||("object"!=typeof window||window!==f?function(){}:"download"in HTMLAnchorElement.prototype&&!a?function(b,g,h){var i=f.URL||f.webkitURL,j=document.createElement("a");g=g||b.name||"download",j.download=g,j.rel="noopener","string"==typeof b?(j.href=b,j.origin===location.origin?e(j):d(j.href)?c(b,g,h):e(j,j.target="_blank")):(j.href=i.createObjectURL(b),setTimeout(function(){i.revokeObjectURL(j.href)},4E4),setTimeout(function(){e(j)},0))}:"msSaveOrOpenBlob"in navigator?function(f,g,h){if(g=g||f.name||"download","string"!=typeof f)navigator.msSaveOrOpenBlob(b(f,h),g);else if(d(f))c(f,g,h);else{var i=document.createElement("a");i.href=f,i.target="_blank",setTimeout(function(){e(i)})}}:function(b,d,e,g){if(g=g||open("","_blank"),g&&(g.document.title=g.document.body.innerText="downloading..."),"string"==typeof b)return c(b,d,e);var h="application/octet-stream"===b.type,i=/constructor/i.test(f.HTMLElement)||f.safari,j=/CriOS\/[\d]+/.test(navigator.userAgent);if((j||h&&i||a)&&"undefined"!=typeof FileReader){var k=new FileReader;k.onloadend=function(){var a=k.result;a=j?a:a.replace(/^data:[^;]*;/,"data:attachment/file;"),g?g.location.href=a:location=a,g=null},k.readAsDataURL(b)}else{var l=f.URL||f.webkitURL,m=l.createObjectURL(b);g?g.location=m:location.href=m,g=null,setTimeout(function(){l.revokeObjectURL(m)},4E4)}});f.saveAs=g.saveAs=g,"undefined"!=typeof module&&(module.exports=g)});
+
+//# sourceMappingURL=FileSaver.min.js.map
+
 // keep project and data in the global scope
 let project = {
   statekeys: false,
@@ -162,6 +166,7 @@ const Modal = {
   render({
     title = "Are you sure you want to proceed?",
     content,
+    onLoad,
     onConfirm
   }) {
     // if (!options) return false;
@@ -186,7 +191,7 @@ const Modal = {
       </main>
       <footer>
         <button class="${buttonClass} bg-transparent border ${project.dark ? 'border-gray-600' : 'border-gray-200'}" style="color: unset;" aria-label="Close" onclick="this.closest('dialog').close()">close</button>
-        <button class="${buttonClass}" aria-label="Confirm">confirm</button>
+        ${onConfirm ? `<button class="${buttonClass}" aria-label="Confirm">confirm</button>` : ''}
       </footer>
     </article>`;
 
@@ -195,6 +200,10 @@ const Modal = {
     modal.innerHTML = html;
 
     document.body.appendChild(modal);
+    if (onLoad && typeof onLoad === 'function') {
+      onLoad();
+    }
+
     const closeBtn = modal.querySelector('footer button:first-child');
     const confirmBtn = modal.querySelector('footer button:last-child');
 
@@ -452,8 +461,9 @@ function html2json(input, output) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(inputHTML, 'text/html');
   const json = Array.from(doc.body.children).map(child => elementToJson(child));
-
-  document.querySelector(`${output}`).value = JSON.stringify(json, null, 2);
+  project.html = inputHTML;
+  project.json = JSON.stringify(json, null, 2);
+  document.querySelector(`${output}`).value = project.json;
 }
 // converts json to html
 function json2html(input, output) {
@@ -530,7 +540,9 @@ function json2html(input, output) {
   }
 
   const inputJSON = JSON.parse(document.querySelector(`${input}`).value);
-  document.querySelector(`${output}`).value = beautifyHtml(inputJSON);
+  project.json = inputJSON;
+  project.html = beautifyHtml(inputJSON);
+  document.querySelector(`${output}`).value = project.html;
 }
 // new project
 function newProject() {
@@ -561,12 +573,12 @@ function importProject() {
     content: `<div class="p-4 text-center">All current data will be lost.</div>`,
     onConfirm: function() {
       // Create an input element of type file
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.json'; // Accept only .json files
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = '.json'; // Accept only .json files
     
       // Add event listener for file selection
-      input.addEventListener('change', (event) => {
+      fileInput.addEventListener('change', (event) => {
         const file = event.target.files[0];
         
         if (!file) {
@@ -583,6 +595,9 @@ function importProject() {
             
             // Replace project data with imported JSON data
             project = {...project, ...importedData};
+
+            // set theme
+            document.documentElement.setAttribute('data-theme', project.dark);
       
             input.value = project.html;
             output.value = project.json;
@@ -598,35 +613,66 @@ function importProject() {
     
         // Read the file as text
         reader.readAsText(file);
-        input.remove();
+        fileInput.remove();
       });
     
       // Click the input element to trigger file selection dialog
-      input.click();
+      fileInput.click();
     }
   });
 }
 // download
 function download(string) {
-  let fileName = 'output';
+  // Ask user for confirmation
+  Modal.render({
+    title: "Project File Name",
+    content: `<input id="fileName" type="text" value="output" placeholder="Project file name....">`,
+    onLoad: function() {
+      const fileNameInput = document.getElementById('fileName');
+      fileNameInput.focus();
+      fileNameInput.select();
+    
+      const confirmBtn = fileNameInput.closest('dialog').querySelector('footer button:last-child');
 
-  // Ask user for file name
-  const confirmed = window.confirm("Are you sure you want to start a new project? All current data will be lost.");
-  if (!confirmed) return;
+      fileNameInput.onkeydown = event => {
+        if (event.key === 'Enter') {
+          event.preventDefault(); // Prevent the default form submission
+          confirmBtn.click(); // Trigger the confirm button click
+        }
+      };
+    },
+    onConfirm: function() {
+      const fileName = document.getElementById('fileName').value.trim().toLowerCase();
+      const html = document.getElementById('input').value;
+      const json = document.getElementById('output').value;
+      
+      if (!fileName) {
+        return Modal.render({
+          title: "Error",
+          content: `<div class="text-center">File name not found!</div>`
+        });
+      }
   
-  if (string) {
-    if (string === 'html') {
-      const html = new Blob([project.html], { type: 'text/html' });
-      saveAs(html, `${fileName}.html`);
+      let fileContent, extension, blob;
+      if (string) {
+        if (string === 'html') {
+          fileContent = html;
+          extension = 'html';
+          blob = new Blob([fileContent], { type: "text/html;charset=utf-8" });
+        }
+        if (string === 'json') {
+          fileContent = json;
+          extension = 'json';
+          blob = new Blob([fileContent], { type: "application/json;charset=utf-8" });
+        }
+      } else {
+        fileContent = JSON.stringify(project, null, 2);
+        extension = 'json';
+        blob = new Blob([fileContent], {type: "application/json;charset=utf-8"});
+      }
+      saveAs(blob, `${fileName}${string ? `` : `_html2json`}.${extension}`);
     }
-    if (string === 'json') {
-      const json = new Blob([project.json], { type: 'application/json' });
-      saveAs(json, `${fileName}.json`);
-    }
-  } else {
-    const json = JSON.stringify(project, null, 2);
-    saveAs(json, `${fileName}-html2json.json`);
-  }
+  });
 }
 
 // other functions for app

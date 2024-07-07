@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+  <html lang="en" data-theme="dark">
+  <head>
+    <title>html2json</title>
+    <meta charset="utf-8">
+    <meta name="description" content="A simple app that converts HTML to JSON and back. This is effective for utilization of a virtual dom like an app such as a website builder.">
+    <meta name="author" content="Michael Schwartz">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, interactive-widget=resizes-content">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="html2json">
+    <meta name="theme-color" content="#13171f">
+    <meta name="apple-mobile-web-app-title" content="html2json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="msapplication-starturl" content="./index.html">
+    <meta name="msapplication-navbutton-color" content="#13171f">
+    <meta property="og:url"         content="https://michaelsboost.github.io/html2json/" />
+    <meta property="og:type"        content="website" />
+    <meta property="og:title"       content="html2json" />
+    <meta property="og:description" content="A simple app that converts HTML to JSON and back. This is effective for utilization of a virtual dom like an app such as a website builder." />
+    <link rel="stylesheet" href="../dist/style.css">
+  </head>
+  </head>
+  <body>
+    <header class="absolute inset-0 text-center grid grid-cols-1 items-center">
+      <hgroup>
+        <h1 class="mb-2 text-[#ffffff00]">html2json</h1>
+        <h2 class="text-[#ffffff00]">A simple app that converts HTML to JSON and back. This is effective for utilization of a virtual dom like an app such as a website builder.</h2>
+      </hgroup>
+    </header>
+    
+    <!-- flexbox for panels and preview -->
+    <div class="flex flex-col flex-col-reverse sm:flex-row absolute inset-0 bottom-0 overflow-hidden">
+      <div 
+        class="flex-[2] sm:flex-[1] relative w-full sm:w-96 h-full border-0 border-t sm:border-0 sm:border-r border-solid border-gray-800" 
+        data-theme="border"
+      >
+        <div class="relative h-full" data-panel="code">
+          <textarea 
+            id="input" 
+            class="w-full h-full resize-none rounded-none m-0 text-sm bg-transparent border-0"
+            style="color: unset;"
+            placeholder="HTML code here..."
+          ></textarea>
+          <button
+            aria-label="export html"
+            name="export html"
+            class="absolute bottom-0 right-0 w-10 h-10 p-1 m-4 rounded-full bg-pink-500 focus:shadow-none border-0"
+            onclick="download('html')"
+          >
+            <svg class="h-full transform scale-50" viewBox="0 0 384 512">
+              <path 
+                fill="currentColor"
+                d="M64 0C28.7 0 0 28.7 0 64V448c0 35.3 28.7 64 64 64H320c35.3 0 64-28.7 64-64V160H256c-17.7 0-32-14.3-32-32V0H64zM256 0V128H384L256 0zM216 232V334.1l31-31c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-72 72c-9.4 9.4-24.6 9.4-33.9 0l-72-72c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l31 31V232c0-13.3 10.7-24 24-24s24 10.7 24 24z" />
+            </svg>
+          </button>
+        </div>
+        <div class="h-full hidden" data-panel="settings"></div>
+      </div>
+      
+      <div class="flex-[2] w-full overflow-hidden flex">
+        <div class="relative w-full h-full border-0 overflow-auto p-4">
+          <nav class="absolute inset-0 flex flex-col">
+            <div class="flex-[0] border-0 border-b border-solid border-gray-800" data-theme="border" data-menubar></div>
+            <div class="flex-[2] overflow-hidden">
+              <div class="relative grid grid-cols-1 align-center items-center w-full h-full">
+                <textarea 
+                  id="output" 
+                  class="w-full h-full resize-none rounded-none m-0 text-sm bg-transparent border-0" 
+                  data-theme="border"
+                  style="color: unset;"
+                  placeholder="JSON code here..."
+                >[]</textarea>
+                <button
+                  aria-label="export json"
+                  name="export json"
+                  class="absolute bottom-0 right-0 w-10 h-10 p-1 m-4 rounded-full bg-purple-500 focus:shadow-none"
+                  onclick="download('json')"
+                >
+                  <svg class="h-full transform scale-50" viewBox="0 0 384 512">
+                    <path 
+                      fill="currentColor"
+                      d="M64 0C28.7 0 0 28.7 0 64V448c0 35.3 28.7 64 64 64H320c35.3 0 64-28.7 64-64V160H256c-17.7 0-32-14.3-32-32V0H64zM256 0V128H384L256 0zM216 232V334.1l31-31c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-72 72c-9.4 9.4-24.6 9.4-33.9 0l-72-72c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l31 31V232c0-13.3 10.7-24 24-24s24 10.7 24 24z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </div>
+
+    <script src="../src/script.js"></script>
+  </body>
+</html>
