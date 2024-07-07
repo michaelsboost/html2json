@@ -2,6 +2,8 @@
 
 A simple app that converts HTML to JSON and back. This is effective for utilization of a virtual dom like an app such as a website builder.
 
+![](https://raw.githubusercontent.com/michaelsboost/html2json/main/screenshot.png)
+
 ### Version
 0.0.1
 
