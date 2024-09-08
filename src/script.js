@@ -443,7 +443,14 @@ function html2json(input) {
   project.html = input;
   const parser = new DOMParser();
   const doc = parser.parseFromString(input, 'text/html');
-  const json = Array.from(doc.body.children).map(child => elementToJson(child));
+  
+  // Process both head and body elements
+  const headJson = Array.from(doc.head.children).map(child => elementToJson(child));
+  const bodyJson = Array.from(doc.body.children).map(child => elementToJson(child));
+
+  // Combine the head and body JSON structures into one array
+  json = [...headJson, ...bodyJson];
+
   project.json = JSON.stringify(json, null, 2);
   return project.json;
 }
@@ -537,6 +544,7 @@ function json2html(input) {
 
   project.json = JSON.parse(input);
   project.html = beautifyHtml(project.json);
+  project.json = JSON.stringify(project.json, null, 2);
   return project.html;
 }
 // new project
@@ -725,8 +733,19 @@ document.addEventListener('DOMContentLoaded', function() {
   Settings.render('[data-panel=settings]');
   const input = document.getElementById('input');
   const output = document.getElementById('output');
-  input.oninput = () => output.value = html2json(input.value);
-  output.oninput = () => input.value = json2html(output.value);
+  input.oninput = () => {
+    output.value = html2json(input.value);
+    localStorage.setItem('html2json', JSON.stringify(project));
+  }
+  output.oninput = () => {
+    input.value = json2html(output.value);
+    localStorage.setItem('html2json', JSON.stringify(project));
+  }
+
+  if (localStorage.getItem('html2json')) {
+    project = JSON.parse(localStorage.getItem('html2json'));
+  }
+
   input.value = project.html;
   output.value = project.json;
 });

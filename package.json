@@ -4,7 +4,8 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "build:css": "postcss src/style.css -o dist/style.css"
+    "build:css": "postcss src/style.css -o dist/style.css",
+    "serve": "http-server -c-1 -p 8081"
   },
   "dependencies": {
     "autoprefixer": "^10.4.19",
